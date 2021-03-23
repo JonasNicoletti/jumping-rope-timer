@@ -13,29 +13,33 @@ const DEFAULT_REST_TIME = 60 * 1000;
 const TIMER_TICK = 1000;
 enum TimerState {
   STOP,
-  ACTIVITY,
-  REST,
+  START,
   PAUSE
+}
+enum TimerMode {
+  ACTIVITY,
+  REST
 }
 export default function App() {
   const [activityTime, setActivityTime] = useState(DEFAULT_ACTIVITY_TIME);
   const [restTime, setrestTime] = useState(DEFAULT_REST_TIME);
   const [timerState, setTimerState] = useState(TimerState.STOP);
+  const [timerMode, setTimerMode] = useState(TimerMode.ACTIVITY);
   const [time, setTime] = useState(DEFAULT_ACTIVITY_TIME);
   useEffect(() => {
     if (time <= 0) {
-      if (timerState === 1) {
-        setTimerState(TimerState.REST);
+      if (timerMode === 0) {
+        setTimerMode(TimerMode.REST);
         setTime(restTime);
         return;
       } 
-      if (timerState === 2) {
-        setTimerState(TimerState.ACTIVITY);
+      if (timerMode === 1) {
+        setTimerMode(TimerMode.ACTIVITY);
         setTime(activityTime);
         return;
       }
     }
-    if (timerState == 1 || timerState == 2) {
+    if (timerState == 1) {
       const interval = setInterval(() => {
         setTime(time - TIMER_TICK);
       }, TIMER_TICK);
@@ -46,42 +50,41 @@ export default function App() {
   const onStateButtonPress = () => {
     switch (timerState) {
       case 0:
-        setTimerState(TimerState.ACTIVITY);
+      case 2:
+        setTimerState(TimerState.START);
         break;
       case 1:
         setTimerState(TimerState.PAUSE);
         break;  
-      case 3:
-        setTimerState(TimerState.ACTIVITY);
-        break;  
       default:
-        setTimerState(TimerState.STOP);
-        setTime(activityTime);
+        throw new Error("Illegal TimerState");
     }
   };
   const onResetPress = () => {
     setTimerState(TimerState.STOP);
+    setTimerMode(TimerMode.ACTIVITY)
     setTime(activityTime);
   };
 
   const getPlayPauseIcon = (): string => {
     switch (timerState) {
-      case 1:
+      case 0:
       case 2:
-        return "pause"
+        return "play"
       default:
-        return "play"  
+        return "pause"  
 
     }
   }
   const getStateIcon = (): string  => {
-    switch (timerState) {
-      case 1:
+    if(timerState === 0) return "";
+    switch (timerMode) {
+      case 0:
         return "run-fast";
-      case 2:
+      case 1:
         return "bed";
       default:
-        return "";  
+        throw new Error("Illegal TimerMode");  
     }
   }
 
