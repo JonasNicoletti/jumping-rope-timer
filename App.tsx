@@ -8,49 +8,62 @@ import {
   Button,
 } from "react-native-paper";
 const DEFAULT_ACTIVITY_TIME = 120 * 1000;
-enum TimeState {
+const DEFAULT_REST_TIME = 60 * 1000;
+const TIMER_TICK = 100;
+enum TimerState {
   STOP,
   ACTIVITY,
   REST,
+  PAUSE
 }
 export default function App() {
   const [activityTime, setActivityTime] = useState(DEFAULT_ACTIVITY_TIME);
-  const [restTime, setrestTime] = useState(60 * 1000);
-  const [timerState, setTimerState] = useState(TimeState.ACTIVITY);
+  const [restTime, setrestTime] = useState(DEFAULT_REST_TIME);
+  const [timerState, setTimerState] = useState(TimerState.STOP);
   const [time, setTime] = useState(DEFAULT_ACTIVITY_TIME);
   useEffect(() => {
     if (time <= 0) {
-      setTimerState(TimeState.STOP);
+      setTimerState(TimerState.STOP);
       setTime(activityTime);
     }
-    if (timerState > 0) {
+    if (timerState == 1) {
       const interval = setInterval(() => {
-        setTime(time - 1000);
-      }, 1001);
+        setTime(time - TIMER_TICK);
+      }, TIMER_TICK);
       return () => clearInterval(interval);
     }
   }, [timerState, time]);
-  const getTitleLabel = (): string => {
-    switch (timerState) {
-      case 0:
-        return "START";
-      default:
-        return "STOP";
-    }
-  };
+
   const onStateButtonPress = () => {
     switch (timerState) {
       case 0:
-        setTimerState(TimeState.ACTIVITY);
+        setTimerState(TimerState.ACTIVITY);
         break;
+      case 1:
+        setTimerState(TimerState.PAUSE);
+        break;  
+      case 3:
+        setTimerState(TimerState.ACTIVITY);
+        break;  
       default:
-        setTimerState(TimeState.STOP);
+        setTimerState(TimerState.STOP);
         setTime(activityTime);
     }
   };
   const onResetPress = () => {
+    setTimerState(TimerState.STOP);
     setTime(activityTime);
   };
+
+  const getPlayPauseIcon = (): string => {
+    switch (timerState) {
+      case 1:
+        return "pause"
+      default:
+        return "play"  
+
+    }
+  }
 
   return (
     <PaperProvider>
@@ -78,14 +91,13 @@ export default function App() {
           </Title>
         </View>
         <Button
+        icon={getPlayPauseIcon()}
           style={styles.actions}
           onPress={onStateButtonPress}
-          mode="contained"
-        >
-          {getTitleLabel()}
+          mode="outlined"
+          >
         </Button>
-        <Button style={styles.actions} onPress={onResetPress} mode="contained">
-          RESET
+        <Button icon="stop" style={styles.actions} onPress={onResetPress} mode="contained">
         </Button>
       </View>
     </PaperProvider>
