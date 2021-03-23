@@ -6,10 +6,11 @@ import {
   Text,
   Title,
   Button,
+  IconButton,
 } from "react-native-paper";
 const DEFAULT_ACTIVITY_TIME = 120 * 1000;
 const DEFAULT_REST_TIME = 60 * 1000;
-const TIMER_TICK = 100;
+const TIMER_TICK = 1000;
 enum TimerState {
   STOP,
   ACTIVITY,
@@ -23,10 +24,18 @@ export default function App() {
   const [time, setTime] = useState(DEFAULT_ACTIVITY_TIME);
   useEffect(() => {
     if (time <= 0) {
-      setTimerState(TimerState.STOP);
-      setTime(activityTime);
+      if (timerState === 1) {
+        setTimerState(TimerState.REST);
+        setTime(restTime);
+        return;
+      } 
+      if (timerState === 2) {
+        setTimerState(TimerState.ACTIVITY);
+        setTime(activityTime);
+        return;
+      }
     }
-    if (timerState == 1) {
+    if (timerState == 1 || timerState == 2) {
       const interval = setInterval(() => {
         setTime(time - TIMER_TICK);
       }, TIMER_TICK);
@@ -58,10 +67,21 @@ export default function App() {
   const getPlayPauseIcon = (): string => {
     switch (timerState) {
       case 1:
+      case 2:
         return "pause"
       default:
         return "play"  
 
+    }
+  }
+  const getStateIcon = (): string  => {
+    switch (timerState) {
+      case 1:
+        return "run-fast";
+      case 2:
+        return "bed";
+      default:
+        return "";  
     }
   }
 
@@ -70,18 +90,25 @@ export default function App() {
       <View style={styles.container}>
         <View style={styles.intervalls}>
           <View style={styles.intervall}>
-            <Text style={styles.labels}>Acivity</Text>
-            <TextInput
-              value={activityTime.toString()}
-              onChangeText={(text) => setActivityTime(+text)}
-            ></TextInput>
+            <IconButton
+            icon="run-fast"
+            size={42}/>
+
+            <Text
+            //label="activity intervall"
+            //  value={activityTime.toString()}
+            //  onChangeText={(text) => setActivityTime(+text)}
+            >{toReadableTimes(activityTime)}</Text>
           </View>
           <View style={styles.intervall}>
-            <Text style={styles.labels}>Rest</Text>
-            <TextInput
-              value={restTime.toString()}
-              onChangeText={(text) => setrestTime(+text)}
-            ></TextInput>
+          <IconButton
+            icon="bed"
+            size={42}/>
+            <Text
+            //label="activity intervall"
+            //  value={activityTime.toString()}
+            //  onChangeText={(text) => setActivityTime(+text)}
+            >{toReadableTimes(restTime)}</Text>
           </View>
         </View>
 
@@ -89,6 +116,9 @@ export default function App() {
           <Title style={styles.labels} adjustsFontSizeToFit>
             {toReadableTimes(time)}
           </Title>
+          <IconButton
+            icon={getStateIcon()}
+            size={50}/>
         </View>
         <Button
         icon={getPlayPauseIcon()}
@@ -126,8 +156,9 @@ const styles = StyleSheet.create({
     margin: 24,
   },
   intervall: {
+    flex: 0.5,
     flexDirection: "row",
-    alignContent: "space-around",
+    alignContent: "stretch",
     alignItems: "center",
     marginRight: 12,
   },
