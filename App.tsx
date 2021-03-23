@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import {
   Provider as PaperProvider,
@@ -7,32 +7,58 @@ import {
   Title,
   Button,
   IconButton,
+  Dialog,
+  Portal,
+  Headline,
 } from "react-native-paper";
+import SmoothPicker from "react-native-smooth-picker";
 const DEFAULT_ACTIVITY_TIME = 120 * 1000;
 const DEFAULT_REST_TIME = 60 * 1000;
 const TIMER_TICK = 1000;
 enum TimerState {
   STOP,
   START,
-  PAUSE
+  PAUSE,
 }
 enum TimerMode {
   ACTIVITY,
-  REST
+  REST,
 }
 export default function App() {
   const [activityTime, setActivityTime] = useState(DEFAULT_ACTIVITY_TIME);
-  const [restTime, setrestTime] = useState(DEFAULT_REST_TIME);
+  const [restTime, setRestTime] = useState(DEFAULT_REST_TIME);
   const [timerState, setTimerState] = useState(TimerState.STOP);
   const [timerMode, setTimerMode] = useState(TimerMode.ACTIVITY);
+  const [minutePicked, setMinutePicked] = useState<null | number>(null);
+  const [secondPicked, setSecondPicked] = useState<null | number>(null);
+  const [settingsMode, setSettingsMode] = useState<null | TimerMode>(null);
   const [time, setTime] = useState(DEFAULT_ACTIVITY_TIME);
+  const [visible, setVisible] = useState(false);
+  const showDialog = (mode: TimerMode) => {
+    setSettingsMode(mode);
+    setVisible(true);
+  };
+  const clodeDialog = () => {
+    const newTimeValue =
+      (minutePicked || 0) * 60 * 1000 + (secondPicked || 0) * 1000;
+    if (settingsMode === 0) {
+      setActivityTime(newTimeValue);
+    }
+    if (settingsMode === 1) {
+      setRestTime(newTimeValue);
+    }
+    setSettingsMode(null);
+    setMinutePicked(null);
+    setSecondPicked(null);
+    setVisible(false);
+  };
   useEffect(() => {
     if (time <= 0) {
       if (timerMode === 0) {
         setTimerMode(TimerMode.REST);
         setTime(restTime);
         return;
-      } 
+      }
       if (timerMode === 1) {
         setTimerMode(TimerMode.ACTIVITY);
         setTime(activityTime);
@@ -55,14 +81,14 @@ export default function App() {
         break;
       case 1:
         setTimerState(TimerState.PAUSE);
-        break;  
+        break;
       default:
         throw new Error("Illegal TimerState");
     }
   };
   const onResetPress = () => {
     setTimerState(TimerState.STOP);
-    setTimerMode(TimerMode.ACTIVITY)
+    setTimerMode(TimerMode.ACTIVITY);
     setTime(activityTime);
   };
 
@@ -70,23 +96,22 @@ export default function App() {
     switch (timerState) {
       case 0:
       case 2:
-        return "play"
+        return "play";
       default:
-        return "pause"  
-
+        return "pause";
     }
-  }
-  const getStateIcon = (): string  => {
-    if(timerState === 0) return "";
+  };
+  const getStateIcon = (): string => {
+    if (timerState === 0) return "";
     switch (timerMode) {
       case 0:
         return "run-fast";
       case 1:
         return "bed";
       default:
-        throw new Error("Illegal TimerMode");  
+        throw new Error("Illegal TimerMode");
     }
-  }
+  };
 
   return (
     <PaperProvider>
@@ -94,24 +119,34 @@ export default function App() {
         <View style={styles.intervalls}>
           <View style={styles.intervall}>
             <IconButton
-            icon="run-fast"
-            size={42}/>
+              icon="run-fast"
+              onPress={() => showDialog(TimerMode.ACTIVITY)}
+              animated={true}
+              size={42}
+            />
 
             <Text
             //label="activity intervall"
             //  value={activityTime.toString()}
             //  onChangeText={(text) => setActivityTime(+text)}
-            >{toReadableTimes(activityTime)}</Text>
+            >
+              {toReadableTimes(activityTime)}
+            </Text>
           </View>
           <View style={styles.intervall}>
-          <IconButton
-            icon="bed"
-            size={42}/>
+            <IconButton
+              icon="bed"
+              size={42}
+              animated={true}
+              onPress={() => showDialog(TimerMode.REST)}
+            />
             <Text
             //label="activity intervall"
             //  value={activityTime.toString()}
             //  onChangeText={(text) => setActivityTime(+text)}
-            >{toReadableTimes(restTime)}</Text>
+            >
+              {toReadableTimes(restTime)}
+            </Text>
           </View>
         </View>
 
@@ -119,20 +154,105 @@ export default function App() {
           <Title style={styles.labels} adjustsFontSizeToFit>
             {toReadableTimes(time)}
           </Title>
-          <IconButton
-            icon={getStateIcon()}
-            size={50}/>
+          <IconButton icon={getStateIcon()} size={64} />
         </View>
         <Button
-        icon={getPlayPauseIcon()}
+          icon={getPlayPauseIcon()}
           style={styles.actions}
           onPress={onStateButtonPress}
           mode="outlined"
-          >
-        </Button>
-        <Button icon="stop" style={styles.actions} onPress={onResetPress} mode="contained">
-        </Button>
+        ></Button>
+        <Button
+          icon="stop"
+          style={styles.actions}
+          onPress={onResetPress}
+          mode="contained"
+        ></Button>
       </View>
+      <Portal>
+        <Dialog visible={visible} onDismiss={clodeDialog}>
+          <Dialog.Title>ACTIVITY INTERVALL</Dialog.Title>
+          <Dialog.Content>
+            <View style={styles.dialogInput}>
+              <SmoothPicker
+                style={styles.picker}
+                scrollAnimation
+                selectOnPress={true}
+                keyExtractor={(_, index) => index.toString()}
+                onSelected={({ item }) => setMinutePicked(item)}
+                data={[
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8,
+                  9,
+                  10,
+                  11,
+                  12,
+                  15,
+                  20,
+                  25,
+                  30,
+                  40,
+                  50,
+                  55,
+                ]}
+                renderItem={({ item, index }) => (
+                  <Text
+                    key={index}
+                    style={{
+                      fontSize: 25,
+                      width: 50,
+                      borderStyle: "solid",
+                      borderColor: "grey",
+                      borderTopWidth: 1,
+                      textAlign: "center",
+                      padding: 5,
+                    }}
+                  >
+                    {formatTime(item)}
+                  </Text>
+                )}
+              />
+              <Headline style={{ textAlign: "center", marginRight: 10 }}>
+                :
+              </Headline>
+              <SmoothPicker
+                style={styles.picker}
+                scrollAnimation
+                selectOnPress={true}
+                data={[0, 15, 30, 45]}
+                keyExtractor={(_, index) => index.toString()}
+                onSelected={({ item }) => setSecondPicked(item)}
+                renderItem={({ item, index }) => (
+                  <Text
+                    key={index}
+                    style={{
+                      fontSize: 25,
+                      width: 50,
+                      borderStyle: "solid",
+                      borderColor: "grey",
+                      borderTopWidth: 1,
+                      textAlign: "center",
+                      padding: 5,
+                    }}
+                  >
+                    {formatTime(item)}
+                  </Text>
+                )}
+              />
+            </View>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={clodeDialog}>Done</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </PaperProvider>
   );
 }
@@ -164,6 +284,16 @@ const styles = StyleSheet.create({
     alignContent: "stretch",
     alignItems: "center",
     marginRight: 12,
+  },
+  dialogInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    margin: 50,
+  },
+  picker: {
+    height: 100,
+    maxWidth: 55,
   },
   timerView: {
     flex: 0.6,
