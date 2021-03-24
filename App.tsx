@@ -1,20 +1,20 @@
-import React, { memo, useEffect, useState } from "react";
+import { useKeepAwake } from "expo-keep-awake";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import {
   Provider as PaperProvider,
-  TextInput,
   Text,
   Title,
   Button,
   IconButton,
-  Dialog,
   Portal,
-  Headline,
 } from "react-native-paper";
-import SmoothPicker from "react-native-smooth-picker";
+import SettingsDialog from "./components/SettingsDialog";
+import { formatTime } from "./utils";
 const DEFAULT_ACTIVITY_TIME = 120 * 1000;
 const DEFAULT_REST_TIME = 60 * 1000;
 const TIMER_TICK = 1000;
+
 enum TimerState {
   STOP,
   START,
@@ -34,11 +34,12 @@ export default function App() {
   const [settingsMode, setSettingsMode] = useState<null | TimerMode>(null);
   const [time, setTime] = useState(DEFAULT_ACTIVITY_TIME);
   const [visible, setVisible] = useState(false);
+  useKeepAwake();
   const showDialog = (mode: TimerMode) => {
     setSettingsMode(mode);
     setVisible(true);
   };
-  const clodeDialog = () => {
+  const closeDialog = () => {
     const newTimeValue =
       (minutePicked || 0) * 60 * 1000 + (secondPicked || 0) * 1000;
     if (settingsMode === 0) {
@@ -170,88 +171,18 @@ export default function App() {
         ></Button>
       </View>
       <Portal>
-        <Dialog visible={visible} onDismiss={clodeDialog}>
-          <Dialog.Title>ACTIVITY INTERVALL</Dialog.Title>
-          <Dialog.Content>
-            <View style={styles.dialogInput}>
-              <SmoothPicker
-                style={styles.picker}
-                scrollAnimation
-                selectOnPress={true}
-                keyExtractor={(_, index) => index.toString()}
-                onSelected={({ item }) => setMinutePicked(item)}
-                data={[
-                  0,
-                  1,
-                  2,
-                  3,
-                  4,
-                  5,
-                  6,
-                  7,
-                  8,
-                  9,
-                  10,
-                  11,
-                  12,
-                  15,
-                  20,
-                  25,
-                  30,
-                  40,
-                  50,
-                  55,
-                ]}
-                renderItem={({ item, index }) => (
-                  <Text
-                    key={index}
-                    style={{
-                      fontSize: 25,
-                      width: 50,
-                      borderStyle: "solid",
-                      borderColor: "grey",
-                      borderTopWidth: 1,
-                      textAlign: "center",
-                      padding: 5,
-                    }}
-                  >
-                    {formatTime(item)}
-                  </Text>
-                )}
-              />
-              <Headline style={{ textAlign: "center", marginRight: 10 }}>
-                :
-              </Headline>
-              <SmoothPicker
-                style={styles.picker}
-                scrollAnimation
-                selectOnPress={true}
-                data={[0, 15, 30, 45]}
-                keyExtractor={(_, index) => index.toString()}
-                onSelected={({ item }) => setSecondPicked(item)}
-                renderItem={({ item, index }) => (
-                  <Text
-                    key={index}
-                    style={{
-                      fontSize: 25,
-                      width: 50,
-                      borderStyle: "solid",
-                      borderColor: "grey",
-                      borderTopWidth: 1,
-                      textAlign: "center",
-                      padding: 5,
-                    }}
-                  >
-                    {formatTime(item)}
-                  </Text>
-                )}
-              />
-            </View>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={clodeDialog}>Done</Button>
-          </Dialog.Actions>
-        </Dialog>
+        <SettingsDialog
+          visible={visible}
+          closeDialog={closeDialog}
+          setMinutePicked={setMinutePicked}
+          setSecondPicked={setSecondPicked}
+        />
+        <SettingsDialog
+          visible={visible}
+          closeDialog={closeDialog}
+          setMinutePicked={setMinutePicked}
+          setSecondPicked={setSecondPicked}
+        />
       </Portal>
     </PaperProvider>
   );
@@ -261,10 +192,6 @@ const toReadableTimes = (timestamp: number): string => {
   const minutes = timestamp / 1000 / 60;
   const seconds = (timestamp / 1000) % 60;
   return `${formatTime(minutes)}:${formatTime(seconds)}`;
-};
-
-const formatTime = (timestamp: number): string => {
-  return (~~timestamp).toString().padStart(2, "0");
 };
 
 const styles = StyleSheet.create({
