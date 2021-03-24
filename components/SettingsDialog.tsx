@@ -34,58 +34,48 @@ interface SettingsDialogProps {
   setMinutePicked: (item: number) => void;
   setSecondPicked: (item: number) => void;
 }
+
 export default function SettingsDialog({
   visible,
   closeDialog,
   setMinutePicked,
   setSecondPicked,
 }: SettingsDialogProps) {
-  const minutePicker = useMemo(
-    () => (
-      <SmoothPicker
-        style={styles.picker}
-        scrollAnimation
-        selectOnPress={true}
-        keyExtractor={(_, index) => index.toString()}
-        onSelected={({ item }) => setMinutePicked(item)}
-        data={MINUTES_OPTIONS}
-        renderItem={({ item, index }) => (
-          <Text key={index} style={styles.picketItem}>
-            {formatTime(item)}
-          </Text>
-        )}
-      />
-    ),
-    [MINUTES_OPTIONS]
-  );
-  const secondsPicker = useMemo(
-    () => (
-      <SmoothPicker
-        style={styles.picker}
-        scrollAnimation
-        selectOnPress={true}
-        data={SECONDS_OPTIONS}
-        keyExtractor={(_, index) => index.toString()}
-        onSelected={({ item }) => setSecondPicked(item)}
-        renderItem={({ item, index }) => (
-          <Text key={index} style={styles.picketItem}>
-            {formatTime(item)}
-          </Text>
-        )}
-      />
-    ),
-    [MINUTES_OPTIONS]
-  );
+
   return (
     <Dialog visible={visible} onDismiss={closeDialog}>
       <Dialog.Title>ACTIVITY INTERVALL</Dialog.Title>
       <Dialog.Content>
         <View style={styles.dialogInput}>
-          {minutePicker}
+          <SmoothPicker
+            style={styles.picker}
+            scrollAnimation
+            selectOnPress={true}
+            keyExtractor={(_, index) => index.toString()}
+            onSelected={({ item }) => setMinutePicked(item)}
+            data={MINUTES_OPTIONS}
+            renderItem={({ item, index }) => (
+              <Text key={index} style={styles.picketItem}>
+                {formatTime(item)}
+              </Text>
+            )}
+          />
           <Headline style={{ textAlign: "center", marginRight: 10 }}>
             :
           </Headline>
-          {secondsPicker}
+          <SmoothPicker
+            style={styles.picker}
+            scrollAnimation
+            selectOnPress={true}
+            data={SECONDS_OPTIONS}
+            keyExtractor={(_, index) => index.toString()}
+            onSelected={({ item }) => setSecondPicked(item)}
+            renderItem={({ item, index }) => (
+              <Text key={index} style={styles.picketItem}>
+                {formatTime(item)}
+              </Text>
+            )}
+          />
         </View>
       </Dialog.Content>
       <Dialog.Actions>
